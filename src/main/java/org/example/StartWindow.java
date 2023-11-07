@@ -68,6 +68,7 @@ public class StartWindow extends MedicalFrame implements ActionListener {
 
         frame.add(panel);
         frame.setVisible(true);
+        setLocationRelativeTo(null);
     }
 
     @Override
@@ -77,6 +78,11 @@ public class StartWindow extends MedicalFrame implements ActionListener {
             String password = new String(passwordField.getPassword());
             Student currentStudent = convertJsonToStudent(jedis.get(studentNumber));
             if (Objects.equals(currentStudent.getPassword(), password)){
+                Date now = new Date();
+                if (now.after(currentStudent.getWhenHealthy())){
+                    currentStudent.setIll(false);
+                    jedis.set(studentNumber, convertStudentToJson(currentStudent));
+                }
                 resultLabel.setText("Вхід успішний");
                 StudentWindow studentWindow = new StudentWindow(currentStudent);
                 studentWindow.setVisible(true);

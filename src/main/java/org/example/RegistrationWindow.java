@@ -103,5 +103,6 @@ public class RegistrationWindow extends MedicalFrame {
             }
         });
         add(registerButton, constraints);
+        setLocationRelativeTo(null);
     }
 }

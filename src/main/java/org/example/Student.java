@@ -1,5 +1,7 @@
 package org.example;
 
+import com.google.gson.Gson;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -10,7 +12,7 @@ public class Student implements Serializable {
     private String surname;
     private String group;
     private boolean isIll;
-    private Date isHealthy;
+    private Date whenHealthy;
 
     public String getStudentID() {
         return studentID;
@@ -60,12 +62,12 @@ public class Student implements Serializable {
         isIll = ill;
     }
 
-    public Date getIsHealthy() {
-        return isHealthy;
+    public Date getWhenHealthy() {
+        return whenHealthy;
     }
 
-    public void setIsHealthy(Date isHealthy) {
-        this.isHealthy = isHealthy;
+    public void setWhenHealthy(Date whenHealthy) {
+        this.whenHealthy = whenHealthy;
     }
 
     public Student(String studentID, String password, String name, String surname, String group, boolean isIll, Date isHealthy) {
@@ -75,6 +77,17 @@ public class Student implements Serializable {
         this.surname = surname;
         this.group = group;
         this.isIll = isIll;
-        this.isHealthy = isHealthy;
+        this.whenHealthy = isHealthy;
     }
+
+    public static String convertStudentToJson(Student student) {
+        Gson gson = new Gson();
+        return gson.toJson(student);
+    }
+
+    public static Student convertJsonToStudent(String json) {
+        Gson gson = new Gson();
+        return gson.fromJson(json, Student.class);
+    }
+
 }

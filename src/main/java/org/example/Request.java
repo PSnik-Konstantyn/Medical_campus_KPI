@@ -1,15 +1,10 @@
 package org.example;
 
+import com.google.gson.Gson;
+
 import java.io.Serializable;
 
 public class Request implements Serializable {
-    public int getRequestID() {
-        return requestID;
-    }
-
-    public void setRequestID(int requestID) {
-        this.requestID = requestID;
-    }
 
     public String getStudentID() {
         return studentID;
@@ -35,14 +30,23 @@ public class Request implements Serializable {
         isReplied = replied;
     }
 
-    public Request(int requestID, String studentID, String text, boolean isReplied) {
-        this.requestID = requestID;
+    public Request( String studentID, String text, boolean isReplied) {
         this.studentID = studentID;
         this.text = text;
         this.isReplied = isReplied;
     }
 
-    private int requestID;
+    public String toJson() {
+        Gson gson = new Gson();
+        return gson.toJson(this);
+    }
+
+
+    public static Request fromJson(String json) {
+        Gson gson = new Gson();
+        return gson.fromJson(json, Request.class);
+    }
+
     private String studentID;
     private String text;
     private boolean isReplied;
