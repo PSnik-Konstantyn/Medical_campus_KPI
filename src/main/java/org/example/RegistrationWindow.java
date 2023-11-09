@@ -93,7 +93,7 @@ public class RegistrationWindow extends MedicalFrame {
                         String group = groupField.getText();
                         Date now = new Date();
                         Student newStudent = new Student(studentNumber, password, firstName, lastName, group, false, now);
-                        jedis.set(studentNumber, convertStudentToJson(newStudent));
+                        jedis.set("st:" + studentNumber, convertStudentToJson(newStudent));
                         dispose();
                         StartWindow startWindow = new StartWindow();
                     }

@@ -76,7 +76,13 @@ public class StartWindow extends MedicalFrame implements ActionListener {
         try (Jedis jedis = jedisPool.getResource()) {
             String studentNumber = studentNumberField.getText();
             String password = new String(passwordField.getPassword());
-            Student currentStudent = convertJsonToStudent(jedis.get(studentNumber));
+            if (studentNumber.equals("3")){
+                AdminWindow adminWindow = new AdminWindow();
+                adminWindow.setVisible(true);
+                frame.dispose();
+                return;
+            }
+            Student currentStudent = convertJsonToStudent(jedis.get("st:" + studentNumber));
             if (Objects.equals(currentStudent.getPassword(), password)){
                 Date now = new Date();
                 if (now.after(currentStudent.getWhenHealthy())){
