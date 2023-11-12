@@ -9,7 +9,6 @@ import java.awt.event.ActionListener;
 import java.util.Date;
 import java.util.Objects;
 
-import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 import static org.example.JedisActions.convertJsonToStudent;
 import static org.example.JedisActions.convertStudentToJson;
 import static org.example.Main.jedisPool;
@@ -73,34 +72,34 @@ public class StartWindow extends MedicalFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
-        try (Jedis jedis = jedisPool.getResource()) {
-            String studentNumber = studentNumberField.getText();
-            String password = new String(passwordField.getPassword());
-            if (studentNumber.equals("3")){
-                AdminWindow adminWindow = new AdminWindow();
-                adminWindow.setVisible(true);
-                frame.dispose();
-                return;
-            }
-            Student currentStudent = convertJsonToStudent(jedis.get("st:" + studentNumber));
-            if (Objects.equals(currentStudent.getPassword(), password)){
-                Date now = new Date();
-                if (now.after(currentStudent.getWhenHealthy())){
-                    currentStudent.setIll(false);
-                    jedis.set(studentNumber, convertStudentToJson(currentStudent));
-                }
-                resultLabel.setText("Вхід успішний");
-                StudentWindow studentWindow = new StudentWindow(currentStudent);
-                studentWindow.setVisible(true);
-                frame.dispose();
-            } else {
-                resultLabel.setText("Неправильний пароль");
-            }
-        } catch (Exception e2) {
-            RegistrationWindow registrationWindow = new RegistrationWindow();
-            registrationWindow.setVisible(true);
+        String studentNumber = studentNumberField.getText();
+        String password = new String(passwordField.getPassword());
+        if (studentNumber.equals("3")) {
+            AdminWindow adminWindow = new AdminWindow();
+            adminWindow.setVisible(true);
             frame.dispose();
-        }
 
+        } else {
+            try (Jedis jedis = jedisPool.getResource()) {
+                Student currentStudent = convertJsonToStudent(jedis.get("st:" + studentNumber));
+                if (Objects.equals(currentStudent.getPassword(), password)) {
+                    Date now = new Date();
+                    if (now.after(currentStudent.getWhenHealthy())) {
+                        currentStudent.setIll(false);
+                        jedis.set(studentNumber, convertStudentToJson(currentStudent));
+                    }
+                    resultLabel.setText("Вхід успішний");
+                    StudentWindow studentWindow = new StudentWindow(currentStudent);
+                    studentWindow.setVisible(true);
+                    frame.dispose();
+                } else {
+                    resultLabel.setText("Неправильний пароль");
+                }
+            } catch (Exception e2) {
+                RegistrationWindow registrationWindow = new RegistrationWindow();
+                registrationWindow.setVisible(true);
+                frame.dispose();
+            }
+        }
     }
 }

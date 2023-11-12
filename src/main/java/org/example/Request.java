@@ -41,7 +41,6 @@ public class Request implements Serializable {
         return gson.toJson(this);
     }
 
-
     public static Request fromJson(String json) {
         Gson gson = new Gson();
         return gson.fromJson(json, Request.class);

@@ -8,8 +8,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import static org.example.DateUtil.addDays;
+import static org.example.JedisActions.convertStudentToJson;
 import static org.example.Main.jedisPool;
+import static org.example.Request.fromJson;
 
 public class AdminWindow extends MedicalFrame {
 
@@ -29,23 +37,23 @@ public class AdminWindow extends MedicalFrame {
         JPanel panel1 = new JPanel();
         panel1.setLayout(new BorderLayout());
         JLabel searchLabel = new JLabel("Пошук за групою");
-        JTextField searchField = new JTextField(20);
+        JTextField searchFieldSt = new JTextField(20);
         JButton searchButton = new JButton("Пошук");
         JTextArea studentArea = new JTextArea();
-        studentArea.setRows(10); // Установите количество строк, которое вы хотите видеть
-        studentArea.setColumns(20); // Установите количество столбцов, которое вы хотите видеть
-        studentArea.setLineWrap(true); // Разрешить перенос строк
+        studentArea.setRows(10);
+        studentArea.setColumns(20);
+        studentArea.setLineWrap(true);
         studentArea.setWrapStyleWord(true);
         JScrollPane studentScrollPane = new JScrollPane(studentArea);
         panel1.add(searchLabel, BorderLayout.NORTH);
-        panel1.add(searchField, BorderLayout.CENTER);
+        panel1.add(searchFieldSt, BorderLayout.CENTER);
         panel1.add(searchButton, BorderLayout.EAST);
         panel1.add(studentScrollPane, BorderLayout.SOUTH);
 
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String searchGroup = searchField.getText();
+                String searchGroup = searchFieldSt.getText();
                 if (!searchGroup.isEmpty()) {
                     studentArea.setText("Результати пошуку хворих для групи " + searchGroup + ":\n");
 
@@ -57,7 +65,7 @@ public class AdminWindow extends MedicalFrame {
                                 for (String studentKey : studentKeys) {
                                     Student studentInfo = Student.convertJsonToStudent(jedis.get(studentKey));
                                     if (searchGroup.equals(studentInfo.getGroup()) && studentInfo.isIll()) {
-                                        studentArea.append(studentInfo.getName() + studentInfo.getSurname() + "\n");
+                                        studentArea.append(studentInfo.getName() + " " + studentInfo.getSurname() + "хворіє до: " + studentInfo.getWhenHealthy() + "\n");
                                     }
                                 }
                             } catch (Exception e2) {
@@ -85,43 +93,111 @@ public class AdminWindow extends MedicalFrame {
         });
 
 
-
         JPanel panel2 = new JPanel();
         panel2.setLayout(new BorderLayout());
-        JLabel requestLabel = new JLabel("Реквестів на лікарняний: " + 1);
-        JTextArea requestArea = new JTextArea();
-        JScrollPane requestScrollPane = new JScrollPane(requestArea);
-        JTextField responseField = new JTextField(20);
-        JButton acceptButton = new JButton("Підтвердити");
-        JButton rejectButton = new JButton("Відхилити");
-        panel2.add(requestLabel, BorderLayout.NORTH);
+        // todo
+        JLabel requestCountLabel = new JLabel("Реквестів на лікарняний: " + 0);
+        JPanel requestPanel = new JPanel();
+        requestPanel.setLayout(new BoxLayout(requestPanel, BoxLayout.Y_AXIS));
+        JScrollPane requestScrollPane = new JScrollPane(requestPanel);
+        panel2.add(requestCountLabel, BorderLayout.NORTH);
         panel2.add(requestScrollPane, BorderLayout.CENTER);
-        panel2.add(responseField, BorderLayout.SOUTH);
-        panel2.add(acceptButton, BorderLayout.WEST);
-        panel2.add(rejectButton, BorderLayout.EAST);
-
-        // Додаємо слухача подій для кнопок "Підтвердити" та "Відхилити"
-        acceptButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Додаткова логіка для підтвердження лікарняного
-                // Можна взяти дані з responseField, якщо потрібно
-                JOptionPane.showMessageDialog(null, "Лікарняний підтверджено.");
-            }
-        });
-
-        rejectButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Додаткова логіка для відхилення лікарняного
-                // Можна взяти дані з responseField, якщо потрібно
-                JOptionPane.showMessageDialog(null, "Лікарняний відхилено.");
-            }
-        });
+        updateRequests(requestPanel);
 
         tabbedPane.addTab("Студенти", panel1);
         tabbedPane.addTab("Звернення", panel2);
 
         add(tabbedPane);
     }
+
+    private void addRequestPanel(JPanel parentPanel, String requestText, String studentID) {
+        JPanel requestPanel = new JPanel();
+        requestPanel.setLayout(new BoxLayout(requestPanel, BoxLayout.Y_AXIS));
+        Student currentStudent = new Student();
+        try (Jedis jedis = jedisPool.getResource()) {
+             currentStudent = Student.convertJsonToStudent(jedis.get("st:" + studentID));
+        }
+        String name = currentStudent.getName();
+        String surname = currentStudent.getSurname();
+        String group = currentStudent.getGroup();
+        JLabel nameLabel = new JLabel("Ім'я: " + name);
+        JLabel surnameLabel = new JLabel("Прізвище: " + surname);
+        JLabel groupLabel = new JLabel("Група: " + group);
+        JTextArea requestTextArea = new JTextArea(requestText);
+        JTextField responseField = new JTextField(20);
+        JButton acceptButton = new JButton("Підтвердити");
+        JButton rejectButton = new JButton("Відхилити");
+
+        acceptButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try (Jedis jedis = jedisPool.getResource()) {
+                    String amountOfDays = responseField.getText();
+                    Student currentStudent = Student.convertJsonToStudent(jedis.get("st:" + studentID));
+                    currentStudent.setIll(true);
+                    Date currentDate = new Date();
+                    currentStudent.setWhenHealthy(addDays(currentDate, Integer.parseInt(amountOfDays)));
+                    System.out.println("Dead" + studentID);
+                    jedis.set("st:" + studentID, convertStudentToJson(currentStudent));
+                    JOptionPane.showMessageDialog(null, "Лікарняний підтверджено!");
+                    updateRequests(parentPanel);
+                } catch (Exception e2){
+                    JOptionPane.showMessageDialog(null, "Сталася помилка!");
+                    e2.printStackTrace();
+                }
+            }
+        });
+
+        rejectButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JOptionPane.showMessageDialog(null, "Лікарняний відхилено.");
+                updateRequests(parentPanel);
+            }
+        });
+
+        requestPanel.add(nameLabel);
+        requestPanel.add(surnameLabel);
+        requestPanel.add(groupLabel);
+        requestPanel.add(requestTextArea);
+        requestPanel.add(responseField);
+        requestPanel.add(acceptButton);
+        requestPanel.add(rejectButton);
+
+        parentPanel.add(requestPanel);
+        parentPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        parentPanel.revalidate();
+        parentPanel.repaint();
+    }
+
+    private void updateRequests(JPanel requestPanel) {
+        requestPanel.removeAll();
+        ArrayList<String> requestsDirty = new ArrayList<>();
+        ArrayList<String> requests = new ArrayList<>();
+        try (Jedis jedis = jedisPool.getResource()) {
+            Set<String> keys = jedis.keys("request:*");
+            requestsDirty = new ArrayList<>(keys);
+            int size = requestsDirty.size();
+            for (int i = 0; i < size; i++) {
+                if (!fromJson(jedis.get(requestsDirty.get(i))).isReplied()) {
+                    requests.add(requestsDirty.get(i));
+                }
+            }
+            if (requests.isEmpty()) {
+                requestPanel.removeAll();
+                JLabel noRequestsLabel = new JLabel("Запитів немає");
+                requestPanel.add(noRequestsLabel);
+            } else {
+                    String requestID = requests.get(0);
+                    Request requestInfo = fromJson(jedis.get(requestID));
+                    requestInfo.setReplied(true);
+                    Student studentInfo = Student.convertJsonToStudent(jedis.get(requestInfo.getStudentID()));
+                    jedis.set(requestID, requestInfo.toJson());
+                    System.out.println(requestID + "внизу" );
+                    addRequestPanel(requestPanel,requestInfo.getText(), studentInfo.getStudentID());
+
+            }
+        }
+    }
+
 }

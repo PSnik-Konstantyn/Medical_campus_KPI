@@ -70,6 +70,9 @@ public class Student implements Serializable {
         this.whenHealthy = whenHealthy;
     }
 
+    public Student() {
+    }
+
     public Student(String studentID, String password, String name, String surname, String group, boolean isIll, Date isHealthy) {
         this.studentID = studentID;
         this.password = password;

@@ -71,7 +71,7 @@ public class StudentWindow extends MedicalFrame {
                     String medicalRequest = medicalRequestField.getText();
                     Request newRequest = new Request(student.getStudentID(), medicalRequest, false);
                     jedis.set("request:" + student.getStudentID(), newRequest.toJson());
-                    medicalRequestField.setText("Ваш запит отримано!");
+                    JOptionPane.showMessageDialog(null, "Запит відправлено!");
                 }
             }
         });
