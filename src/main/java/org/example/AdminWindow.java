@@ -8,10 +8,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import static org.example.DateUtil.addDays;
@@ -31,6 +30,20 @@ public class AdminWindow extends MedicalFrame {
         setIconImage(imageIcon.getImage());
         getContentPane().setBackground(new Color(255, 204, 229));
         setLocationRelativeTo(null);
+
+        try (Jedis jedis = jedisPool.getResource()) {
+            Set<String> studentKeys = jedis.keys("st:*");
+            for (String studentKey : studentKeys) {
+                Student studentInfo = Student.convertJsonToStudent(jedis.get(studentKey));
+                if (studentInfo.isIll()) {
+                    Date newDate = new Date();
+                    if (studentInfo.getWhenHealthy().before(newDate)) {
+                        studentInfo.setIll(false);
+                        jedis.set(studentKey, convertStudentToJson(studentInfo));
+                    }
+                }
+            }
+        }
 
         JTabbedPane tabbedPane = new JTabbedPane();
 
@@ -65,7 +78,9 @@ public class AdminWindow extends MedicalFrame {
                                 for (String studentKey : studentKeys) {
                                     Student studentInfo = Student.convertJsonToStudent(jedis.get(studentKey));
                                     if (searchGroup.equals(studentInfo.getGroup()) && studentInfo.isIll()) {
-                                        studentArea.append(studentInfo.getName() + " " + studentInfo.getSurname() + "хворіє до: " + studentInfo.getWhenHealthy() + "\n");
+                                        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
+                                        String formattedDate = format.format(studentInfo.getWhenHealthy());
+                                        studentArea.append(studentInfo.getName() + " " + studentInfo.getSurname() + " хворіє до: " + formattedDate + "\n");
                                     }
                                 }
                             } catch (Exception e2) {
@@ -95,12 +110,11 @@ public class AdminWindow extends MedicalFrame {
 
         JPanel panel2 = new JPanel();
         panel2.setLayout(new BorderLayout());
-        // todo
-        JLabel requestCountLabel = new JLabel("Реквестів на лікарняний: " + 0);
+        ArrayList<String> requestsDirty = new ArrayList<>();
+        ArrayList<String> requests = new ArrayList<>();
         JPanel requestPanel = new JPanel();
         requestPanel.setLayout(new BoxLayout(requestPanel, BoxLayout.Y_AXIS));
         JScrollPane requestScrollPane = new JScrollPane(requestPanel);
-        panel2.add(requestCountLabel, BorderLayout.NORTH);
         panel2.add(requestScrollPane, BorderLayout.CENTER);
         updateRequests(requestPanel);
 
@@ -115,7 +129,7 @@ public class AdminWindow extends MedicalFrame {
         requestPanel.setLayout(new BoxLayout(requestPanel, BoxLayout.Y_AXIS));
         Student currentStudent = new Student();
         try (Jedis jedis = jedisPool.getResource()) {
-             currentStudent = Student.convertJsonToStudent(jedis.get("st:" + studentID));
+            currentStudent = Student.convertJsonToStudent(jedis.get("st:" + studentID));
         }
         String name = currentStudent.getName();
         String surname = currentStudent.getSurname();
@@ -141,7 +155,7 @@ public class AdminWindow extends MedicalFrame {
                     jedis.set("st:" + studentID, convertStudentToJson(currentStudent));
                     JOptionPane.showMessageDialog(null, "Лікарняний підтверджено!");
                     updateRequests(parentPanel);
-                } catch (Exception e2){
+                } catch (Exception e2) {
                     JOptionPane.showMessageDialog(null, "Сталася помилка!");
                     e2.printStackTrace();
                 }
@@ -188,13 +202,15 @@ public class AdminWindow extends MedicalFrame {
                 JLabel noRequestsLabel = new JLabel("Запитів немає");
                 requestPanel.add(noRequestsLabel);
             } else {
-                    String requestID = requests.get(0);
-                    Request requestInfo = fromJson(jedis.get(requestID));
-                    requestInfo.setReplied(true);
-                    Student studentInfo = Student.convertJsonToStudent(jedis.get(requestInfo.getStudentID()));
-                    jedis.set(requestID, requestInfo.toJson());
-                    System.out.println(requestID + "внизу" );
-                    addRequestPanel(requestPanel,requestInfo.getText(), studentInfo.getStudentID());
+                JLabel requestCountLabel = new JLabel("Реквестів на лікарняний: " + requests.size());
+                requestPanel.add(requestCountLabel, BorderLayout.NORTH);
+                String requestID = requests.get(0);
+                Request requestInfo = fromJson(jedis.get(requestID));
+                requestInfo.setReplied(true);
+                Student studentInfo = Student.convertJsonToStudent(jedis.get(requestInfo.getStudentID()));
+                jedis.set(requestID, requestInfo.toJson());
+                System.out.println(requestID + "внизу");
+                addRequestPanel(requestPanel, requestInfo.getText(), studentInfo.getStudentID());
 
             }
         }

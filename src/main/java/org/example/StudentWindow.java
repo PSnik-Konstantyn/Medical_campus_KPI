@@ -31,10 +31,21 @@ public class StudentWindow extends MedicalFrame {
 
         JLabel nameLabel = new JLabel("Ім'я: " + student.getName() + " " + student.getSurname());
         nameLabel.setFont(labelFont);
+        System.out.println(student.isIll() + student.getName());
         JLabel healthStatus = new JLabel("Стан: " + (student.isIll() ? "Хворий" : "Здоровий"));
         healthStatus.setFont(labelFont);
 
-        JLabel imageLabel = new JLabel("Тут може бути зображення студента");
+        JLabel imageLabel = new JLabel();
+
+        if (student.isIll()) {
+            ImageIcon imageIcon = new ImageIcon(new ImageIcon("src/main/resources/ill.png").getImage().getScaledInstance(70, 70, Image.SCALE_DEFAULT));
+            imageLabel = new JLabel(imageIcon);
+            imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        } else {
+            ImageIcon imageIcon = new ImageIcon(new ImageIcon("src/main/resources/healthy.png").getImage().getScaledInstance(70, 70, Image.SCALE_DEFAULT));
+            imageLabel = new JLabel(imageIcon);
+            imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        }
 
         medicalRequestField = new JTextField(20);
         medicalRequestField.setFont(labelFont);
