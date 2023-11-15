@@ -25,7 +25,6 @@ public class StudentWindow extends MedicalFrame {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.insets = new Insets(20, 20, 20, 20);
-
         Font labelFont = new Font("Arial", Font.BOLD, 16);
         Font buttonFont = new Font("Arial", Font.PLAIN, 16);
 
@@ -46,6 +45,21 @@ public class StudentWindow extends MedicalFrame {
             imageLabel = new JLabel(imageIcon);
             imageLabel.setHorizontalAlignment(JLabel.CENTER);
         }
+
+        ImageIcon imageIcon = new ImageIcon(new ImageIcon("src/main/resources/edit.jpeg").getImage().getScaledInstance(35, 25, Image.SCALE_DEFAULT));
+        JButton editButton = new JButton(imageIcon);
+        editButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+                new UpdateWindow(student).setVisible(true);
+            }
+        });
+
+        constraints.gridx = 2;
+        constraints.gridy = 0;
+        constraints.anchor = GridBagConstraints.NORTHEAST;
+        add(editButton, constraints);
 
         medicalRequestField = new JTextField(20);
         medicalRequestField.setFont(labelFont);

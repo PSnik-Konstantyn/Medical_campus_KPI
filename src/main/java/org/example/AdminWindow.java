@@ -192,9 +192,9 @@ public class AdminWindow extends MedicalFrame {
             Set<String> keys = jedis.keys("request:*");
             requestsDirty = new ArrayList<>(keys);
             int size = requestsDirty.size();
-            for (int i = 0; i < size; i++) {
-                if (!fromJson(jedis.get(requestsDirty.get(i))).isReplied()) {
-                    requests.add(requestsDirty.get(i));
+            for (String s : requestsDirty) {
+                if (!fromJson(jedis.get(s)).isReplied()) {
+                    requests.add(s);
                 }
             }
             if (requests.isEmpty()) {
