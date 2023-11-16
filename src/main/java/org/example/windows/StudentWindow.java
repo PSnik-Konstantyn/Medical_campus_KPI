@@ -1,18 +1,21 @@
-package org.example;
+package org.example.windows;
 
+import org.example.Request;
+import org.example.Student;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Date;
 
-import static org.example.JedisActions.convertStudentToJson;
-import static org.example.Main.jedisPool;
+import static org.example.windows.StartWindow.jedisPool;
+
 
 public class StudentWindow extends MedicalFrame {
     private Student student;
+
 
     JTextField medicalRequestField;
     JButton submitRequestButton;

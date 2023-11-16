@@ -1,19 +1,24 @@
-package org.example;
+package org.example.windows;
 
+import org.example.Student;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Objects;
 
-import static org.example.JedisActions.convertJsonToStudent;
-import static org.example.JedisActions.convertStudentToJson;
-import static org.example.Main.jedisPool;
+import static org.example.Student.convertJsonToStudent;
+import static org.example.Student.convertStudentToJson;
 
 public class StartWindow extends MedicalFrame implements ActionListener {
+
+    public static JedisPool jedisPool;
 
     MedicalFrame frame = new MedicalFrame();
     JButton startButton = new JButton("Ввійти");
@@ -102,4 +107,17 @@ public class StartWindow extends MedicalFrame implements ActionListener {
             }
         }
     }
+
+    public static void main(String[] args) throws URISyntaxException {
+        jedisPool = new JedisPool(new JedisPoolConfig(), "localhost", 6379);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (jedisPool != null) {
+                jedisPool.close();
+            }
+        }));
+        StartWindow registrationWindow = new StartWindow();
+
+    }
+
 }

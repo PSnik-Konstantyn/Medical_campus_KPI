@@ -1,5 +1,7 @@
-package org.example;
+package org.example.windows;
 
+import org.example.Request;
+import org.example.Student;
 import redis.clients.jedis.Jedis;
 
 import javax.swing.*;
@@ -14,9 +16,9 @@ import java.util.Date;
 import java.util.Set;
 
 import static org.example.DateUtil.addDays;
-import static org.example.JedisActions.convertStudentToJson;
-import static org.example.Main.jedisPool;
 import static org.example.Request.fromJson;
+import static org.example.Student.convertStudentToJson;
+import static org.example.windows.StartWindow.jedisPool;
 
 public class AdminWindow extends MedicalFrame {
 
