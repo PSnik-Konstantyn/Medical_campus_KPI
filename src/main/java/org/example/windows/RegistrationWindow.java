@@ -84,24 +84,29 @@ public class RegistrationWindow extends MedicalFrame {
         registerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
                     try (Jedis jedis = jedisPool.getResource()) {
                         String studentNumber = studentNumberField.getText();
                         String password = new String(passwordField.getPassword());
                         String firstName = firstNameField.getText();
                         String lastName = lastNameField.getText();
                         String group = groupField.getText();
-                        Date now = new Date();
-                        Student newStudent = new Student(studentNumber, password, firstName, lastName, group, false, now);
-                        jedis.set("st:" + studentNumber, convertStudentToJson(newStudent));
-                        dispose();
-                        StartWindow startWindow = new StartWindow();
+                        if (studentNumber.isEmpty() || password.isEmpty() || firstName.isEmpty() || lastName.isEmpty() || group.isEmpty()) {
+                            JOptionPane.showMessageDialog(null, "Будь ласка, введіть дані", "Помилка", JOptionPane.ERROR_MESSAGE);
+                            RegistrationWindow reg = new RegistrationWindow();
+                            reg.setVisible(true);
+                            dispose();
+                        } else {
+                            Date now = new Date();
+                            Student newStudent = new Student(studentNumber, password, firstName, lastName, group, false, now);
+                            jedis.set("st:" + studentNumber, convertStudentToJson(newStudent));
+                            dispose();
+                            StartWindow startWindow = new StartWindow();
+                            startWindow.setVisible(true);
+                        }
                     }
-                } catch (Exception e2) {
-                    e2.printStackTrace();
                 }
-            }
         });
+
         add(registerButton, constraints);
         setLocationRelativeTo(null);
     }

@@ -33,7 +33,6 @@ public class StudentWindow extends MedicalFrame {
 
         JLabel nameLabel = new JLabel("Ім'я: " + student.getName() + " " + student.getSurname());
         nameLabel.setFont(labelFont);
-        System.out.println(student.isIll() + student.getName());
         JLabel healthStatus = new JLabel("Стан: " + (student.isIll() ? "Хворий" : "Здоровий"));
         healthStatus.setFont(labelFont);
 
