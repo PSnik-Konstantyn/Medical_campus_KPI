@@ -39,11 +39,11 @@ public class StudentWindow extends MedicalFrame {
         JLabel imageLabel = new JLabel();
 
         if (student.isIll()) {
-            ImageIcon imageIcon = new ImageIcon(new ImageIcon("src/main/resources/ill.png").getImage().getScaledInstance(70, 70, Image.SCALE_DEFAULT));
+            ImageIcon imageIcon = new ImageIcon(new ImageIcon("src/main/resources/ill.png").getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
             imageLabel = new JLabel(imageIcon);
             imageLabel.setHorizontalAlignment(JLabel.CENTER);
         } else {
-            ImageIcon imageIcon = new ImageIcon(new ImageIcon("src/main/resources/healthy.png").getImage().getScaledInstance(70, 70, Image.SCALE_DEFAULT));
+            ImageIcon imageIcon = new ImageIcon(new ImageIcon("src/main/resources/healthy.png").getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
             imageLabel = new JLabel(imageIcon);
             imageLabel.setHorizontalAlignment(JLabel.CENTER);
         }
@@ -57,6 +57,20 @@ public class StudentWindow extends MedicalFrame {
                 new UpdateWindow(student).setVisible(true);
             }
         });
+
+        ImageIcon lungsIcon = new ImageIcon(new ImageIcon("src/main/resources/lungs.png").getImage().getScaledInstance(35, 25, Image.SCALE_DEFAULT));
+        JButton lungsButton = new JButton(lungsIcon);
+
+        lungsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+                new SurveyWindow(student).setVisible(true);
+            }
+        });
+        constraints.gridx = 2;
+        constraints.gridy = 1;
+        add(lungsButton, constraints);
 
         constraints.gridx = 2;
         constraints.gridy = 0;
